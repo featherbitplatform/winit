@@ -1,3 +1,4 @@
+// Modified by the featherbit authors for featherbitplatform/winit; see FORK.md for the list of changes.
 #![allow(non_snake_case)]
 
 mod runner;
@@ -2306,7 +2307,15 @@ unsafe fn public_window_callback_inner(
             }
 
             let new_outer_rect: RECT;
-            {
+            // featherbit change (see FORK.md, change 1): while the user drags the window, use the
+            // rect Windows suggests. Windows computes it to keep the window under the cursor at the
+            // new DPI. The calculation below keeps only the cursor's horizontal position and then
+            // nudges the window onto the new monitor, which with monitors of different scale
+            // (above all stacked vertically, or with offset edges) moves the window away from the
+            // cursor or flips it between monitors on every mouse move, so it can end up off-screen.
+            if dragging_window {
+                new_outer_rect = suggested_rect;
+            } else {
                 let suggested_ul =
                     (suggested_rect.left + margin_left, suggested_rect.top + margin_top);
 
